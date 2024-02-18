@@ -5,13 +5,11 @@ namespace LlamaFS.ENV;
 public class EnvironmentManager
 {
     //I LOVE SINGLETONS
-    public static EnvironmentManager Instance;
+    public static EnvironmentManager Instance { get; } = new();
+
     protected Dictionary<string, VirtualEnvironment> AllEnvs = new();
 
-    public EnvironmentManager()
-    {
-        Instance = this;
-    }
+    public EnvironmentManager() { }
 
     public VirtualEnvironment GetOrCreateEnvironment(string UUID)
     {

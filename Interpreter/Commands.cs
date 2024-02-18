@@ -35,10 +35,9 @@ public static class AllCommands
         throw new CommandNotFoundException($"Command '{commandKey}' not found.");
     }
 
-    internal static void RegisterDefaultCommands()
+    /* internal static void RegisterDefaultCommands()
     {
-        //No default commands at all
-    }
+    } */
 
 }
 

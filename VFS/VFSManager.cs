@@ -5,13 +5,10 @@ namespace LlamaFS.VFS;
 public class VFSManager
 {
     //I LOVE SINGLETONS
-    public static VFSManager Instance;
+    public static VFSManager Instance { get; } = new();
     protected Dictionary<string, VirtualFileSystem> AllVFS = new();
 
-    public VFSManager()
-    {
-
-    }
+    public VFSManager() { }
 
     public VirtualFileSystem GetOrCreateVFS(string UUID)
     {
