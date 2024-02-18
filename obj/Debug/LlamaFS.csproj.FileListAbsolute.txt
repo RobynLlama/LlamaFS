@@ -1,0 +1,9 @@
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/bin/Flowerful/LlamaFS.dll
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/bin/Flowerful/LlamaFS.pdb
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/LlamaFS.csproj.AssemblyReference.cache
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/LlamaFS.GeneratedMSBuildEditorConfig.editorconfig
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/LlamaFS.AssemblyInfoInputs.cache
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/LlamaFS.AssemblyInfo.cs
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/LlamaFS.csproj.CoreCompileInputs.cache
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/LlamaFS.dll
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/LlamaFS.pdb

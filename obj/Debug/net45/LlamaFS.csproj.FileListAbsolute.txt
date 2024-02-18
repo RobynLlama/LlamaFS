@@ -1,0 +1,5 @@
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/net45/LlamaFS.csproj.AssemblyReference.cache
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/net45/LlamaFS.GeneratedMSBuildEditorConfig.editorconfig
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/net45/LlamaFS.AssemblyInfoInputs.cache
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/net45/LlamaFS.AssemblyInfo.cs
+/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/Debug/net45/LlamaFS.csproj.CoreCompileInputs.cache

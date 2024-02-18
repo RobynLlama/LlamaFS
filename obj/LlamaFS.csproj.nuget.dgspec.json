@@ -1,0 +1,53 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/LlamaFS.csproj": {}
+  },
+  "projects": {
+    "/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/LlamaFS.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/LlamaFS.csproj",
+        "projectName": "LlamaFS",
+        "projectPath": "/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/LlamaFS.csproj",
+        "packagesPath": "/home/qtmims/.nuget/packages/",
+        "outputPath": "/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/qtmims/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net45"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://nuget.samboy.dev/v3/index.json": {}
+        },
+        "frameworks": {
+          "net45": {
+            "targetAlias": "net45",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net45": {
+          "targetAlias": "net45",
+          "dependencies": {
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.2, )"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/7.0.306/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

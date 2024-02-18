@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "zlZdDmj7yN1W3XdCbkRCj7wLIp4SsKr4gJqKq3QcziB1akTqAsn2SGaKReOVF4IzL2d9WDOtuWRk2Ug0T93JcQ==",
+  "success": true,
+  "projectFilePath": "/home/qtmims/.steam/debian-installation/steamapps/common/Computer Repair Shop/plugins-workdir/LlamaFS/LlamaFS.csproj",
+  "expectedPackageFiles": [
+    "/home/qtmims/.nuget/packages/microsoft.netframework.referenceassemblies/1.0.2/microsoft.netframework.referenceassemblies.1.0.2.nupkg.sha512",
+    "/home/qtmims/.nuget/packages/microsoft.netframework.referenceassemblies.net45/1.0.2/microsoft.netframework.referenceassemblies.net45.1.0.2.nupkg.sha512"
+  ],
+  "logs": []
+}
