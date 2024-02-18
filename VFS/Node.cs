@@ -12,39 +12,9 @@ public enum NodeType
 }
 public struct Node
 {
-    const int MaxFileName = 10;
-    const int MaxFileLength = 300;
     public readonly NodeType nodeType;
-    private string _name = string.Empty;
-    private string _value = string.Empty;
-    public string Name
-    {
-        get => _name;
-        internal set
-        {
-            if (value.Length > MaxFileName)
-            {
-                _name = value.Substring(0, MaxFileName);
-                return;
-            }
-
-            _name = value;
-        }
-    }
-    public string Value
-    {
-        get => _value;
-        internal set
-        {
-            if (value.Length > MaxFileLength)
-            {
-                _value = value.Substring(0, MaxFileLength);
-                return;
-            }
-
-            _value = value;
-        }
-    }
+    public string Name;
+    public string Value;
     public int Parent { internal set; get; }
     public readonly int UUID;
 
@@ -53,6 +23,16 @@ public struct Node
         nodeType = type;
         Parent = parent;
         Name = name;
+        Value = string.Empty;
+    }
+
+    public Node(Node node, string name)
+    {
+        nodeType = node.nodeType;
+        Parent = node.Parent;
+        Name = name;
+        Value = node.Value;
+        UUID = node.UUID;
     }
 
 }
