@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 namespace LlamaFS.VFS;
-public class VirtualFileSystem
+public partial class VirtualFileSystem
 {
 
     private int NextFileID = 0;
@@ -48,25 +48,27 @@ public class VirtualFileSystem
     }
     #endregion
 
-    #region MasterFunctions
-    /*********************************************
-        MASTER FUNCTIONS
-    *********************************************/
-    /* public void MountMasterVFS(int UUID)
-    {
-        VirtualFileSystem newMaster = VFSManager.Instance.GetOrCreateVFS(UUID);
-
-        if (!newMaster.Locked)
-            throw new FileSystemException(UUID, "Master VFS is not locked");
-
-        MasterUUID = UUID;
-    } */
-    #endregion
-
     #region Nodes
     /*********************************************
         NODES
     *********************************************/
+    /// <summary>
+    /// Returns a node information tuple about a specific node ID
+    /// </summary>
+    /// <param name="ID"></param>
+    /// <returns></returns>
+    /// <exception cref="FileSystemNodeException"></exception>
+    internal (Node node, NodeState state) NodeGet(int ID)
+    {
+        NodeState state = NodeGetState(ID);
+
+        return state switch
+        {
+            NodeState.Local => (FileTable[ID], state),
+            NodeState.Master => (VFSManager.Instance.GetVFS(MasterUUID).NodeGet(ID).node, state),
+            _ => throw new FileSystemNodeException(ID, UUID, "Node does not exist on VFS or any Master"),
+        };
+    }
     protected NodeState NodeGetState(int ID)
     {
         if (FileTable.ContainsKey(ID))
@@ -215,64 +217,6 @@ public class VirtualFileSystem
 
         NodeInfo.node.Value = contents;
         FileTable[ID] = NodeInfo.node;
-    }
-    #endregion
-
-    #region Public
-    /// <summary>
-    /// Returns a node information tuple about a specific node ID
-    /// </summary>
-    /// <param name="ID"></param>
-    /// <returns></returns>
-    /// <exception cref="FileSystemNodeException"></exception>
-    internal (Node node, NodeState state) NodeGet(int ID)
-    {
-        NodeState state = NodeGetState(ID);
-
-        return state switch
-        {
-            NodeState.Local => (FileTable[ID], state),
-            NodeState.Master => (VFSManager.Instance.GetVFS(MasterUUID).NodeGet(ID).node, state),
-            _ => throw new FileSystemNodeException(ID, UUID, "Node does not exist on VFS or any Master"),
-        };
-    }
-    public int FileCreate(int Parent, string Name)
-    {
-        //Enforce name length
-        if (Name.Length > MaxFileNameLength)
-            Name = Name.Substring(0, MaxFileNameLength);
-
-        return NodeCreate(NodeType.File, Parent, Name);
-    }
-
-    public int DirCreate(int Parent, string Name)
-    {
-        //Enforce name length
-        if (Name.Length > MaxFileNameLength)
-            Name = Name.Substring(0, MaxFileNameLength);
-
-        return NodeCreate(NodeType.Directory, Parent, Name);
-    }
-
-    public void FileRemove(int ID) => NodeDelete(ID);
-    public void DirRemove(int ID) => NodeDeleteTree(ID);
-
-    public void Rename(int ID, string Name)
-    {
-        //Enforce name length
-        if (Name.Length > MaxFileNameLength)
-            Name = Name.Substring(0, MaxFileNameLength);
-
-        NodeRename(ID, Name);
-    }
-
-    public void FileRead(int ID) => NodeOpen(ID);
-    public void FileWrite(int ID, string contents)
-    {
-        if (contents.Length > MaxFileContentLength)
-            NodeWrite(ID, contents.Substring(0, MaxFileContentLength));
-        else
-            NodeWrite(ID, contents);
     }
     #endregion
 }
