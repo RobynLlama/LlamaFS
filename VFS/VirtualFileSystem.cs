@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using LlamaFS.VFS.Nodes;
 
 namespace LlamaFS.VFS;
 public class VirtualFileSystem
@@ -8,10 +7,17 @@ public class VirtualFileSystem
     private int NextFileID = 0;
     protected Dictionary<int, Node> FileTable = new();
     protected List<int> DeletedRecords = new();
-    protected readonly int MaxFileSize = 350;
-    protected readonly int UUID;
-    protected readonly int MasterUUID;
-    protected readonly bool Locked;
+    public int MaxFileSize { get; } = 350;
+    public int UUID { get; }
+    public int MasterUUID { get; protected set; }
+    public bool Locked { get; protected set; }
+    public enum NodeState
+    {
+        Null,
+        Deleted,
+        Local,
+        Master
+    };
 
     public VirtualFileSystem(int UUID, int MasterUUID = 0, bool Locked = false)
     {
@@ -25,6 +31,7 @@ public class VirtualFileSystem
         };
 
     }
+
 
     #region InternalFunctions
     /*********************************************
@@ -41,13 +48,14 @@ public class VirtualFileSystem
     /*********************************************
         MASTER FUNCTIONS
     *********************************************/
-    protected T NodeGetMaster<T>(int ID) where T : Node
+    public void MountMasterVFS(int UUID)
     {
-        if (MasterUUID == 0)
-            throw new FileSystemNodeException(ID, UUID, "Node does not exist on VFS");
+        VirtualFileSystem newMaster = VFSManager.Instance.GetOrCreateVFS(UUID);
 
-        //Search for node by ID on the master
-        return VFSManager.Instance.GetOrCreateVFS(MasterUUID).NodeGet<T>(ID, true);
+        if (!newMaster.Locked)
+            throw new FileSystemException(UUID, "Master VFS is not locked");
+
+        MasterUUID = UUID;
     }
     #endregion
 
@@ -55,6 +63,25 @@ public class VirtualFileSystem
     /*********************************************
         NODES
     *********************************************/
+    public (NodeState, Node) NodeGetState(int ID)
+    {
+        if (FileTable.ContainsKey(ID))
+            return NodeState.Local;
+        else if (DeletedRecords.Contains(ID))
+            return NodeState.Deleted;
+
+        if (MasterUUID == 0)
+            return NodeState.Null;
+        else
+        {
+            NodeState state = VFSManager.Instance.GetVFS(MasterUUID).NodeGetState(ID);
+            if (state == NodeState.Local || state == NodeState.Master)
+                return NodeState.Master;
+
+            else return state;
+        }
+    }
+
     /// <summary>
     /// Gets a node from the current FS, optionally from Masters as well
     /// </summary>
@@ -62,27 +89,22 @@ public class VirtualFileSystem
     /// <param name="ID">The node ID</param>
     /// <param name="AllowMasters">If we should search masters</param>
     /// <returns></returns>
-    public T NodeGet<T>(int ID, bool AllowMasters) where T : Node
+    public T NodeGet<T>(int ID) where T : Node
     {
-        //Does the node exist?
-        if (!FileTable.ContainsKey(ID))
-            //Explicitly deleted nodes do not fetch from master
-            if (NodeIsDeleted(ID))
-                throw new FileSystemNodeException(ID, UUID, "Node is explicitly deleted on VFS");
-            //Only fetch from masters when allowed
-            else if (AllowMasters)
-                return NodeGetMaster<T>(ID);
-            else
-                throw new FileSystemNodeException(ID, UUID, "Node does not exist on VFS");
+        NodeState state = NodeGetState(ID);
 
-        //Return the node
-        return FileTable[ID] as T;
+        return state switch
+        {
+            NodeState.Local => (T)FileTable[ID],
+            NodeState.Master => VFSManager.Instance.GetVFS(MasterUUID).NodeGet<T>(ID),
+            _ => throw new FileSystemNodeException(ID, UUID, "Node does not exist on VFS or any Master"),
+        };
     }
 
-    public bool NodeIsDeleted(int ID)
+    /* public bool NodeIsDeleted(int ID)
     {
         return DeletedRecords.Contains(ID);
-    }
+    } */
 
     /// <summary>
     /// Deletes a node on the local FS (recursively for Dirs) or marks a
@@ -91,60 +113,48 @@ public class VirtualFileSystem
     /// <param name="ID">Node ID of the file to be deleted</param>
     public void NodeDelete(int ID)
     {
-        //Sanity: Is this node already explicitly deleted?
-        if (DeletedRecords.Contains(ID))
+        //Where does the node live?
+        NodeState state = NodeGetState(ID);
+
+        switch (state)
         {
-            throw new FileSystemNodeException(ID, UUID, "Node is explicitly deleted on VFS");
+            case NodeState.Null:
+            case NodeState.Deleted:
+                throw new FileSystemNodeException(ID, UUID, "Node is explicitly deleted on VFS");
+            case NodeState.Local:
+                Node node = NodeGet<Node>(ID);
+                //Add to deleted records
+                DeletedRecords.Add(ID);
+
+                //If the node is a Directory, delete its children
+                if (node is DirNode dirNode)
+                {
+                    foreach (Node child in dirNode)
+                    {
+                        NodeDelete(child.UUID);
+                    }
+                }
+
+                //Remove from FileTable
+                FileTable.Remove(node.UUID);
+
+                //Remove from Parent
+                if (node.Parent != 0)
+                {
+                    if (NodeGetState(node.Parent) != NodeState.Local)
+                        throw new FileSystemNodeException(node.Parent, UUID, "Node parent not on same VFS as child.");
+
+                    DirNode parent = NodeGet<DirNode>(node.Parent);
+
+                    parent.Children.Remove(node);
+                }
+
+                break;
+            case NodeState.Master:
+                //It only exists on a master so just mark it deleted
+                DeletedRecords.Add(ID);
+                break;
         }
-
-        Node node;
-
-        //Does the node exist on our LocalFS?
-        node = NodeGet<Node>(ID, false);
-
-        if (node is null)
-        {
-            //Master FS may have this file
-            node = NodeGet<Node>(ID, true);
-
-            //Master FS has this file
-            if (node is not null)
-            {
-                //Mark this node as deleted
-                DeletedRecords.Add(node.UUID);
-            }
-
-            throw new FileSystemNodeException(ID, UUID, "Node does not exist on VFS");
-        }
-
-        //Local FS has this file
-        //Mark this node as deleted
-        DeletedRecords.Add(node.UUID);
-
-        //If the node is a Directory, delete its children
-        if (node is DirNode dirNode)
-        {
-            foreach (Node child in dirNode)
-            {
-                NodeDelete(child.UUID);
-            }
-        }
-
-        //Remove from FileTable
-        FileTable.Remove(node.UUID);
-
-        if (node.Parent != 0)
-        {
-            DirNode parent = NodeGet<DirNode>(node.Parent, false);
-
-            if (parent == null)
-                return;
-
-            //Remove from Parent
-            parent.Children.Remove(node);
-        }
-
-        return;
 
     }
     #endregion
@@ -153,12 +163,10 @@ public class VirtualFileSystem
     /*********************************************
         DIR NODES
     *********************************************/
-    /* public int DirNodeCreate(int ParentID, string Name)
+    public int DirNodeCreate(int ParentID, string Name)
     {
-        //Get the parent node from our FS only
-        DirNode node = NodeGet<DirNode>(ParentID, false);
-        NodeDelete
-    } */
+        return 0;
+    }
     #endregion
 
     #region FileNodes
@@ -167,36 +175,63 @@ public class VirtualFileSystem
     *********************************************/
     public int FileNodeCreate(int Parent, string Name, bool Binary = false)
     {
-        //Sanity: Does the parent exist?
-        if (!FileTable.ContainsKey(Parent))
+        NodeState parentState = NodeGetState(Parent);
+
+        switch (parentState)
         {
-            throw new FileSystemNodeException(Parent, UUID, "Node parent does not exist");
+            case NodeState.Null:
+            case NodeState.Deleted:
+                throw new FileSystemNodeException(Parent, UUID, "Parent does not exist");
         }
 
-        //Sanity: Is the parent a DirNode?
-        if (FileTable[Parent] is not DirNode parent)
-        {
-            throw new FileSystemNodeException(Parent, UUID, "Node parent is not assignable from DirNode");
-        }
+        Node parentNode = NodeGet<Node>(Parent);
 
-        //Sanity: Does the DirNode already contain something with this name?
-        foreach (Node item in parent)
+        //Sanity: Is parent a dir
+        if (parentNode is not DirNode)
+            throw new FileSystemNodeException(Parent, UUID, "Parent is not assignable from DirNode");
+
+        int existingID = -1;
+
+        //Sanity: Does this filename already exist?
+        foreach (Node item in (DirNode)parentNode)
         {
             if (item.Name == Name)
-                if (item.nodeType == NodeType.File)
-                    return item.UUID;
-                else
-                    throw new FileSystemNodeException(Parent, UUID, $"Node parent already contains a child with name {Name} ");
+            {
+                existingID = item.UUID;
+
+                if (item.nodeType != NodeType.File)
+                    throw new FileSystemNodeException(item.UUID, UUID, "Existing child is not a file type node");
+            }
         }
 
-        int fileID = GetNextID();
+        //Create parent if needed
+        if (parentState != NodeState.Local)
+            NodeGet<DirNode>(DirNodeCreate(parentNode.Parent, parentNode.Name));
 
-        Node NewNode = new FileNode(Parent, Name, Binary, fileID);
+        //If the child already exists
+        if (existingID > 0)
+        {
 
-        FileTable.Add(fileID, NewNode);
-        parent.Children.Add(NewNode);
+            FileNode existingChild = NodeGet<FileNode>(existingID);
 
-        return fileID;
+            switch (NodeGetState(existingID))
+            {
+                case NodeState.Local:
+                    throw new FileSystemNodeException(existingID, UUID, "File already exists on local VFS");
+                case NodeState.Master:
+                    //The existing node is a file on a master so copy its properties
+                    FileNode newNode = new(Parent, Name, existingChild.Binary, existingChild.UUID);
+                    //Add the parent to the local FS and add ourself as a child;
+
+                    return newNode.UUID;
+            }
+
+        }
+        //The child does not already exist
+        else
+        {
+
+        }
     }
 
     public int FileNodeWrite(int ID, string Contents)
