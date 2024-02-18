@@ -6,11 +6,11 @@ public class VFSManager
 {
     //I LOVE SINGLETONS
     public static VFSManager Instance { get; } = new();
-    protected Dictionary<string, VirtualFileSystem> AllVFS = new();
+    protected Dictionary<int, VirtualFileSystem> AllVFS = new();
 
     public VFSManager() { }
 
-    public VirtualFileSystem GetOrCreateVFS(string UUID)
+    public VirtualFileSystem GetOrCreateVFS(int UUID)
     {
         if (AllVFS.ContainsKey(UUID))
         {

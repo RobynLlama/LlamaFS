@@ -5,8 +5,8 @@ using UnityEngine;
 namespace LlamaFS.ENV;
 public class VirtualEnvironment
 {
-    public int HDD1;
-    public int HDD2;
+    public int HDD1 { get; }
+    public int HDD2 { get; }
     public string CaseUUID;
     protected Dictionary<string, string> variables = new()
     {

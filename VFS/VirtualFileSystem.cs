@@ -9,17 +9,17 @@ public class VirtualFileSystem
     protected Dictionary<int, Node> FileTable = new();
     protected List<int> DeletedRecords = new();
     protected readonly int MaxFileSize = 350;
-    protected readonly string UUID;
-    protected readonly string MasterUUID;
+    protected readonly int UUID;
+    protected readonly int MasterUUID;
     protected readonly bool Locked;
 
-    public VirtualFileSystem(string UUID, string MasterUUID = "_", bool Locked = false)
+    public VirtualFileSystem(int UUID, int MasterUUID = 0, bool Locked = false)
     {
         this.UUID = UUID;
         this.MasterUUID = MasterUUID;
         this.Locked = Locked;
 
-        if (MasterUUID != "_")
+        if (MasterUUID != 0)
         {
             NextFileID = VFSManager.Instance.GetOrCreateVFS(MasterUUID).NextFileID;
         };
@@ -43,7 +43,7 @@ public class VirtualFileSystem
     *********************************************/
     protected T NodeGetMaster<T>(int ID) where T : Node
     {
-        if (MasterUUID == "_")
+        if (MasterUUID == 0)
             throw new FileSystemNodeException(ID, UUID, "Node does not exist on VFS");
 
         //Search for node by ID on the master
