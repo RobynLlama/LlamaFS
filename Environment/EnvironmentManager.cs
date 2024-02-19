@@ -7,11 +7,11 @@ public class EnvironmentManager
     //I LOVE SINGLETONS
     public static EnvironmentManager Instance { get; } = new();
 
-    protected Dictionary<string, VirtualEnvironment> AllEnvs = new();
+    protected Dictionary<int, VirtualEnvironment> AllEnvs = new();
 
     public EnvironmentManager() { }
 
-    public VirtualEnvironment GetOrCreateEnvironment(string UUID)
+    public VirtualEnvironment GetOrCreateEnvironment(int UUID)
     {
 
         if (AllEnvs.ContainsKey(UUID))
