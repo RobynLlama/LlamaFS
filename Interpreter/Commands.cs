@@ -32,11 +32,10 @@ public static class AllCommands
             {
                 return Activator.CreateInstance(type, env) as TerminalCommand ?? throw new InvalidCastException("Unable to instance command type to TerminalCommand " + type.ToString());
             }
-
-
         }
 
-        throw new CommandNotFoundException($"Command '{commandKey}' not found.");
+        return new CommandNotFound(env);
+        //throw new CommandNotFoundException($"Command '{commandKey}' not found.");
     }
 
     /* internal static void RegisterDefaultCommands()
