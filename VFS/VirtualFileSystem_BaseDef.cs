@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
+using LlamaFS.LOG;
 
 namespace LlamaFS.VFS;
 public partial class VirtualFileSystem
@@ -12,8 +14,10 @@ public partial class VirtualFileSystem
     public int MasterUUID { get; protected set; } = 0;
     public int MaxFileNameLength { get; protected set; } = 12;
     public int MaxFileContentLength { get; protected set; } = 300;
+    private Node rootNode = new(NodeType.Directory, 0, "ROOT", 0);
     public enum NodeState
     {
+        Root,
         Null,
         Deleted,
         Local,
@@ -41,8 +45,7 @@ public partial class VirtualFileSystem
     *********************************************/
     protected int GetNextID()
     {
-        NextFileID++;
-        return NextFileID;
+        return ++NextFileID;
     }
     #endregion
 
@@ -64,11 +67,16 @@ public partial class VirtualFileSystem
         {
             NodeState.Local => (FileTable[ID], state),
             NodeState.Master => (VFSManager.Instance.GetVFS(MasterUUID).NodeGet(ID).node, state),
+            NodeState.Root => (rootNode, NodeState.Root),
             _ => throw new FileSystemNodeException(ID, UUID, "Node does not exist on VFS or any Master"),
         };
     }
     protected NodeState NodeGetState(int ID)
     {
+
+        if (ID == 0)
+            return NodeState.Root;
+
         if (FileTable.ContainsKey(ID))
             return NodeState.Local;
         else if (DeletedRecords.Contains(ID))
@@ -130,6 +138,7 @@ public partial class VirtualFileSystem
 
         //We're clear to make a new node
         Node newNode = new(type, Parent, Name, GetNextID());
+        //LogManager.Instance.WriteToLogs(LogLevel.Info, $"Adding node: {newNode.Name},{newNode.Parent},{newNode.UUID}");
         FileTable.Add(newNode.UUID, newNode);
         return newNode.UUID;
     }
@@ -143,6 +152,8 @@ public partial class VirtualFileSystem
             case NodeState.Null:
             case NodeState.Deleted:
                 throw new FileSystemNodeException(ID, UUID, "Trying to delete a non-existant file");
+            case NodeState.Root:
+                throw new FileSystemNodeException(ID, UUID, "Trying to delete root pseudo-node");
         }
 
         //Get children
@@ -167,6 +178,8 @@ public partial class VirtualFileSystem
             case NodeState.Null:
             case NodeState.Deleted:
                 throw new FileSystemNodeException(ID, UUID, "Trying to delete a non-existant file");
+            case NodeState.Root:
+                throw new FileSystemNodeException(ID, UUID, "Trying to delete root pseudo-node");
         }
 
         DeletedRecords.Add(ID);
@@ -182,6 +195,8 @@ public partial class VirtualFileSystem
             case NodeState.Null:
             case NodeState.Deleted:
                 throw new FileSystemNodeException(ID, UUID, "Trying to rename a non-existant file");
+            case NodeState.Root:
+                throw new FileSystemNodeException(ID, UUID, "Trying to rename root pseudo-node");
         }
 
         NodeInfo.node.Name = Name;
@@ -196,7 +211,9 @@ public partial class VirtualFileSystem
         {
             case NodeState.Null:
             case NodeState.Deleted:
-                throw new FileSystemNodeException(ID, UUID, "Trying to delete a non-existant file");
+                throw new FileSystemNodeException(ID, UUID, "Trying to read a non-existant file");
+            case NodeState.Root:
+                throw new FileSystemNodeException(ID, UUID, "Trying to read root pseudo-node");
         }
 
         return NodeInfo.node.Value;
@@ -210,7 +227,9 @@ public partial class VirtualFileSystem
         {
             case NodeState.Null:
             case NodeState.Deleted:
-                throw new FileSystemNodeException(ID, UUID, "Trying to delete a non-existant file");
+                throw new FileSystemNodeException(ID, UUID, "Trying to write a non-existant file");
+            case NodeState.Root:
+                throw new FileSystemNodeException(ID, UUID, "Trying to write root pseudo-node");
         }
 
         NodeInfo.node.Value = contents;
