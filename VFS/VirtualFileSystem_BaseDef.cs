@@ -10,7 +10,6 @@ public partial class VirtualFileSystem
     public int MaxFileSize { get; } = 350;
     public int UUID { get; }
     public int MasterUUID { get; protected set; } = 0;
-    public bool Locked { get; protected set; } = false;
     public int MaxFileNameLength { get; protected set; } = 12;
     public int MaxFileContentLength { get; protected set; } = 300;
     public enum NodeState
@@ -21,17 +20,16 @@ public partial class VirtualFileSystem
         Master
     };
 
-    public VirtualFileSystem(int UUID, int MasterUUID, bool Locked, int MaxFileName, int MaxFileLength)
+    public VirtualFileSystem(int UUID, int MasterUUID, int MaxFileName, int MaxFileLength)
     {
         this.UUID = UUID;
         this.MasterUUID = MasterUUID;
-        this.Locked = Locked;
         MaxFileNameLength = MaxFileName;
         MaxFileContentLength = MaxFileLength;
 
         if (MasterUUID != 0)
         {
-            NextFileID = VFSManager.Instance.GetOrCreateVFS(MasterUUID).NextFileID;
+            NextFileID = VFSManager.Instance.GetVFS(MasterUUID).NextFileID;
         };
 
     }

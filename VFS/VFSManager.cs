@@ -11,15 +11,14 @@ public class VFSManager
 
     public VFSManager() { }
 
-    public VirtualFileSystem GetOrCreateVFS(int UUID)
+    public VirtualFileSystem CreateVFS(int UUID, int Master, int MaxFileName, int MaxFileContent)
     {
         if (AllVFS.ContainsKey(UUID))
         {
-            //Todo: logging callback
-            return AllVFS[UUID];
+            throw new ArgumentException("UUID already exists in VFS list, cannot create", "UUID");
         }
 
-        VirtualFileSystem NewVFS = new(UUID);
+        VirtualFileSystem NewVFS = new(UUID, Master, MaxFileName, MaxFileContent);
         //Todo: logging callback
 
         AllVFS.Add(UUID, NewVFS);
