@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using LlamaFS.VFS;
-using UnityEngine;
 
 namespace LlamaFS.ENV;
 public class VirtualEnvironment
