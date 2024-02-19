@@ -23,6 +23,7 @@ public struct Node
         nodeType = type;
         Parent = parent;
         Name = name;
+        this.UUID = UUID;
         Value = string.Empty;
     }
 
