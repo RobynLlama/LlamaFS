@@ -4,16 +4,16 @@ using System.Collections.Generic;
 namespace LlamaFS.Command;
 public class CommandDictionary
 {
-    private Dictionary<string, object> _dict = new Dictionary<string, object>();
+    private readonly Dictionary<string, Type> _dict = new Dictionary<string, Type>();
 
-    public void Add<T>(string key, T value) where T : TerminalCommand
+    public void Add(string key, Type value)
     {
         _dict.Add(key, value);
     }
 
-    public T GetValue<T>(string key) where T : TerminalCommand
+    public Type GetValue(string key)
     {
-        return _dict[key] as T;
+        return _dict[key];
     }
 }
 

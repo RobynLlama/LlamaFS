@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
-using LlamaFS.VFS;
 using LlamaFS.ENV;
 
 namespace LlamaFS.Command;
@@ -29,7 +28,12 @@ public static class AllCommands
     {
         if (List.TryGetValue(commandKey, out var type))
         {
-            return Activator.CreateInstance(type, env) as ITerminalCommand;
+            if (typeof(TerminalCommand).IsAssignableFrom(type))
+            {
+                return Activator.CreateInstance(type, env) as TerminalCommand ?? throw new InvalidCastException("Unable to instance command type to TerminalCommand " + type.ToString());
+            }
+
+
         }
 
         throw new CommandNotFoundException($"Command '{commandKey}' not found.");
@@ -55,8 +59,5 @@ public abstract class TerminalCommand : ITerminalCommand
         this.env = env;
     }
 
-    public virtual IEnumerator RunCommand(string[] args)
-    {
-        yield break;
-    }
+    public abstract IEnumerator RunCommand(string[] args);
 }
