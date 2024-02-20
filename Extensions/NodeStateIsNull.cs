@@ -4,8 +4,8 @@ namespace LlamaFS.EXT;
 
 public static class NodeStateExt
 {
-    public static bool IsNullorDeleted(this VirtualFileSystem.NodeState state)
+    public static bool IsNullorDeleted(this NodeState state)
     {
-        return state == VirtualFileSystem.NodeState.Null || state == VirtualFileSystem.NodeState.Deleted;
+        return state == NodeState.Null || state == NodeState.Deleted;
     }
 }

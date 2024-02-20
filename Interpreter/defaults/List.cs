@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using LlamaFS.ENV;
 using LlamaFS.VFS;
 
@@ -35,12 +36,15 @@ public class ListDirectory : TerminalCommand
 
         int spacing = env.ResolveMountedVFS(path).vfs.MaxFileNameLength;
 
+        MemoryStream stream;
+
         foreach (Node file in files)
         {
             switch (file.nodeType)
             {
                 case NodeType.File:
-                    yield return $" {file.Name.PadRight(spacing)} {file.Value.Length}b";
+                    stream = env.FileOpen(file.UUID, path, NodeFileMode.IO);
+                    yield return $" {file.Name.PadRight(spacing)} {stream.Length}b";
                     break;
                 case NodeType.Directory:
                     yield return $" {file.Name}/";

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.IO;
 using LlamaFS.ENV;
 
 namespace LlamaFS.Command.Default;
@@ -28,7 +29,11 @@ public class Cat : TerminalCommand
         env.ResolvePath(ref path);
 
         //Console.WriteLine($"Final Path: {path}");
+        string contents;
 
-        yield return env.FileRead(path);
+        StreamReader reader = new(env.FileOpen(path, VFS.NodeFileMode.IO));
+        contents = reader.ReadToEnd();
+
+        yield return contents;
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.IO;
 using System.IO.Compression;
 using System.Text;
 using LlamaFS.ENV;
@@ -32,34 +33,44 @@ public class Zip : TerminalCommand
 
         //Console.WriteLine($"Final Path: {path}");
 
-        string content = env.FileRead(path);
-        string neoContent = string.Empty;
-        int inBytes;
-        int outBytes;
-        byte[] data;
-        byte[] bytes;
+        MemoryStream file = env.FileOpen(path, VFS.NodeFileMode.IO);
 
         switch (option)
         {
             case "-c":
-                bytes = Encoding.ASCII.GetBytes(content);
-                BrotliEncoder brotli = new();
-                data = new byte[bytes.Length];
-                brotli.Compress(bytes, data, out inBytes, out outBytes, true);
-                brotli.Dispose();
-                neoContent = Convert.ToBase64String(data);
+                //Setup streams
+                MemoryStream compressed = new();
+                GZipStream comp = new(compressed, CompressionMode.Compress);
+
+                file.CopyTo(comp);
+                comp.Flush();
+                compressed.Position = 0;
+
+                //Recreate the file for safety
+                file = env.FileOpen(path, VFS.NodeFileMode.Overwrite);
+                compressed.CopyTo(file);
+
+                //Delete streams
+                comp.Dispose();
+                compressed.Dispose();
                 break;
             case "-d":
-                bytes = Convert.FromBase64String(content);
-                BrotliDecoder dec = new();
-                data = new byte[bytes.Length];
-                dec.Decompress(bytes, data, out inBytes, out outBytes);
-                dec.Dispose();
-                neoContent = Encoding.ASCII.GetString(data);
+                MemoryStream decompressed = new();
+                GZipStream decomp = new(file, CompressionMode.Decompress);
+
+                decomp.CopyTo(decompressed);
+                decompressed.Position = 0;
+
+                //Recreate file just in case
+                file = env.FileOpen(path, VFS.NodeFileMode.Overwrite);
+                decompressed.CopyTo(file);
+
+                //cleanup
+                decomp.Dispose();
+                decompressed.Dispose();
                 break;
         }
 
-        yield return neoContent;
-        env.FileWrite(path, neoContent);
+        yield return $"New file size: {file.Length}b";
     }
 }

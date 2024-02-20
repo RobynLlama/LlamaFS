@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using LlamaFS.EXT;
 using LlamaFS.VFS;
 
@@ -98,7 +99,7 @@ public partial class VirtualEnvironment
 
     public bool MakeFile(string Path) => MakeNode(NodeType.File, Path);
     public bool MakeDirectory(string Path) => MakeNode(NodeType.Directory, Path);
-    public bool FileWrite(string Path, string Content)
+    /* public bool FileWrite(string Path, string Content)
     {
         var info = GetNodeFromPath(Path);
 
@@ -110,8 +111,8 @@ public partial class VirtualEnvironment
         ResolveMountedVFS(Path).vfs.FileWrite(info.node.UUID, Content);
         return true;
 
-    }
-    public string FileRead(string Path)
+    } */
+    public MemoryStream FileOpen(string Path, NodeFileMode mode)
     {
         var info = GetNodeFromPath(Path);
 
@@ -120,10 +121,12 @@ public partial class VirtualEnvironment
             throw new FileSystemException(ResolveMountedVFS(Path).vfs.UUID, "Unable to open file for reading");
         }
 
-        return ResolveMountedVFS(Path).vfs.FileRead(info.node.UUID);
+        return ResolveMountedVFS(Path).vfs.FileOpen(info.node.UUID, mode);
     }
 
-    public (Node node, VirtualFileSystem.NodeState state) StatPathNode(string Path)
+    public MemoryStream FileOpen(int ID, string Path, NodeFileMode mode) => ResolveMountedVFS(Path).vfs.FileOpen(ID, mode);
+
+    public (Node node, NodeState state) StatPathNode(string Path)
     {
         return GetNodeFromPath(Path);
     }

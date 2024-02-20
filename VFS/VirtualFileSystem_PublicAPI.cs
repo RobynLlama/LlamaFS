@@ -1,7 +1,29 @@
+using System.IO;
+using LlamaFS.EXT;
+
 namespace LlamaFS.VFS;
 
 public partial class VirtualFileSystem
 {
+    public void Save(Stream output)
+    {
+        StreamWriter stream = new(output);
+
+        string delList = string.Empty;
+
+        foreach (int item in DeletedRecords)
+        {
+            delList += item.ToString();
+        }
+
+        stream.WriteLine($"VFS:{NextFileID}:{UUID}:{MasterUUID}:{MaxFileNameLength}:{MaxFileContentLength}:{delList}");
+        stream.Flush();
+
+        foreach (Node item in FileTable.Values)
+        {
+            item.Save(output);
+        }
+    }
     public int FileCreate(int Parent, string Name)
     {
         //Enforce name length
@@ -32,12 +54,13 @@ public partial class VirtualFileSystem
         NodeRename(ID, Name);
     }
 
-    public string FileRead(int ID) => NodeOpen(ID);
-    public void FileWrite(int ID, string contents)
+    public MemoryStream FileOpen(int ID, NodeFileMode mode) => NodeOpen(ID, mode);
+    /* public void FileWrite(int ID, string contents)
     {
         if (contents.Length > MaxFileContentLength)
             NodeWrite(ID, contents.Substring(0, MaxFileContentLength));
         else
             NodeWrite(ID, contents);
-    }
+    } */
+    public (Node node, NodeState state) GetRaw(int ID) => NodeGet(ID);
 }

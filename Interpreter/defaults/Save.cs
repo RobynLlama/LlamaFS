@@ -1,4 +1,5 @@
 using System.Collections;
+using System.IO;
 using LlamaFS.ENV;
 
 namespace LlamaFS.Command.Default;
@@ -30,9 +31,10 @@ public class Save : TerminalCommand
 
         //Console.WriteLine($"Final Path: {path}");
 
-        if (!env.FileWrite(path, content))
-        {
-            yield return "Failed to save to file";
-        }
+        StreamWriter writer = new(env.FileOpen(path, VFS.NodeFileMode.Overwrite));
+        writer.Write(content);
+        writer.Flush();
+
+        yield return $"Saved {content.Length} bytes";
     }
 }

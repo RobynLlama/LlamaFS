@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using LlamaFS.VFS;
 using LlamaFS.EXT;
+using System.IO;
 
 namespace LlamaFS.ENV;
 public partial class VirtualEnvironment
@@ -19,7 +20,7 @@ public partial class VirtualEnvironment
         this.UUID = UUID;
     }
 
-    internal (Node node, VirtualFileSystem.NodeState state) GetNodeFromPath(string Path)
+    internal (Node node, NodeState state) GetNodeFromPath(string Path)
     {
         //Console.WriteLine("GetNodeFromPath:");
 
@@ -55,7 +56,7 @@ public partial class VirtualEnvironment
         return current;
     }
 
-    internal (Node node, VirtualFileSystem.NodeState state) GetChildByName(VirtualFileSystem vfs, int Parent, string Name)
+    internal (Node node, NodeState state) GetChildByName(VirtualFileSystem vfs, int Parent, string Name)
     {
         List<Node> children = new();
         vfs.NodeGetChildren(Parent, children);
@@ -68,7 +69,7 @@ public partial class VirtualEnvironment
             }
         }
 
-        return (new Node(), VirtualFileSystem.NodeState.Null);
+        return (new Node(), NodeState.Null);
     }
 
     internal bool MakeNode(NodeType type, string Path)

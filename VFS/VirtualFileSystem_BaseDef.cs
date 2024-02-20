@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.ComponentModel.Design.Serialization;
+using System.IO;
 using LlamaFS.LOG;
 
 namespace LlamaFS.VFS;
@@ -8,21 +8,14 @@ public partial class VirtualFileSystem
 
     private int NextFileID = 0;
     protected Dictionary<int, Node> FileTable = new();
+    protected readonly Dictionary<int, MemoryStream> NodeData = new();
     protected List<int> DeletedRecords = new();
     public int MaxFileSize { get; } = 350;
     public int UUID { get; }
     public int MasterUUID { get; protected set; } = 0;
     public int MaxFileNameLength { get; protected set; } = 12;
     public int MaxFileContentLength { get; protected set; } = 300;
-    private Node rootNode = new(NodeType.Directory, 0, "ROOT", 0);
-    public enum NodeState
-    {
-        Root,
-        Null,
-        Deleted,
-        Local,
-        Master
-    };
+    private Node rootNode = new(NodeType.Directory, -1, "ROOT", 0);
 
     public VirtualFileSystem(int UUID, int MasterUUID, int MaxFileName, int MaxFileLength)
     {
@@ -203,7 +196,7 @@ public partial class VirtualFileSystem
         FileTable[ID] = NodeInfo.node;
     }
 
-    protected string NodeOpen(int ID)
+    protected MemoryStream NodeOpen(int ID, NodeFileMode mode)
     {
         var NodeInfo = NodeGet(ID);
 
@@ -216,10 +209,34 @@ public partial class VirtualFileSystem
                 throw new FileSystemNodeException(ID, UUID, "Trying to read root pseudo-node");
         }
 
-        return NodeInfo.node.Value;
+        MemoryStream fileHandle;
+
+        if (!NodeData.TryGetValue(ID, out fileHandle))
+        {
+            fileHandle = new();
+            NodeData[ID] = fileHandle;
+        }
+
+
+        switch (mode)
+        {
+            case NodeFileMode.IO:
+                fileHandle.Position = 0;
+                break;
+            case NodeFileMode.Append:
+                fileHandle.Position = fileHandle.Length;
+                break;
+            case NodeFileMode.Overwrite:
+                fileHandle.Dispose();
+                fileHandle = new();
+                NodeData[ID] = fileHandle;
+                break;
+        }
+
+        return fileHandle;
     }
 
-    protected void NodeWrite(int ID, string contents)
+    /* protected void NodeWrite(int ID, string contents)
     {
         var NodeInfo = NodeGet(ID);
 
@@ -232,8 +249,9 @@ public partial class VirtualFileSystem
                 throw new FileSystemNodeException(ID, UUID, "Trying to write root pseudo-node");
         }
 
-        NodeInfo.node.Value = contents;
+        NodeInfo.node.Value = contents
+
         FileTable[ID] = NodeInfo.node;
-    }
+    } */
     #endregion
 }
