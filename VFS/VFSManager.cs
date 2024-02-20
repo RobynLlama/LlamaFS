@@ -34,4 +34,12 @@ public class VFSManager
 
         throw new ArgumentOutOfRangeException("UUID", "The UUID does not exist in VFS List");
     }
+
+    public void AddVFS(VirtualFileSystem vfs)
+    {
+        if (AllVFS.ContainsKey(vfs.UUID))
+            return;
+
+        AllVFS.Add(vfs.UUID, vfs);
+    }
 }

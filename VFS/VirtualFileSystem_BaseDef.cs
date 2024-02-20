@@ -94,7 +94,7 @@ public partial class VirtualFileSystem
         }
     }
 
-    protected void NodeGetChildren(int Parent, List<Node> nodes)
+    internal void NodeGetChildren(int Parent, List<Node> nodes)
     {
         foreach (Node item in FileTable.Values)
         {
