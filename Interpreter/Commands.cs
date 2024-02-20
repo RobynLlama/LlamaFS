@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections;
 using LlamaFS.ENV;
 using LlamaFS.Command.Default;
-using LlamaFS.LOG;
 
 namespace LlamaFS.Command;
 
@@ -17,6 +16,9 @@ public static class AllCommands
         {"ls", typeof(ListDirectory)},
         {"mkdir", typeof(MKDir)},
         {"mkfile", typeof(MKFile)},
+        {"save", typeof(Save)},
+        {"cat", typeof(Cat)},
+        {"zip", typeof(Zip)},
     };
     public static bool UseDefaultCommands = true;
 

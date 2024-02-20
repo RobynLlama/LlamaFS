@@ -1,11 +1,12 @@
+using System;
 using System.Collections;
 using LlamaFS.ENV;
 
 namespace LlamaFS.Command.Default;
 
-public class MKFile : TerminalCommand
+public class Cat : TerminalCommand
 {
-    public MKFile(VirtualEnvironment env) : base(env)
+    public Cat(VirtualEnvironment env) : base(env)
     {
     }
 
@@ -13,7 +14,7 @@ public class MKFile : TerminalCommand
     {
         if (args.Length < 2)
         {
-            yield return "Usage: mkfile <path>";
+            yield return "Usage: cat <path>";
             yield break;
         }
 
@@ -28,9 +29,6 @@ public class MKFile : TerminalCommand
 
         //Console.WriteLine($"Final Path: {path}");
 
-        if (!env.MakeFile(path))
-        {
-            yield return "Failed to create file";
-        }
+        yield return env.FileRead(path);
     }
 }

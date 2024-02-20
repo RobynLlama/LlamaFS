@@ -27,11 +27,12 @@ public class ListDirectory : TerminalCommand
         }
 
         ProcessQuotedInput(ref path);
-        yield return $"Path: {path}";
+        //yield return $"Path: {path}";
 
         env.ListDirectory(path, files);
 
         yield return $"Contents of {path}\n";
+
         int spacing = env.ResolveMountedVFS(path).vfs.MaxFileNameLength;
 
         foreach (Node file in files)

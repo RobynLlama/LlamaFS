@@ -3,23 +3,25 @@ using LlamaFS.ENV;
 
 namespace LlamaFS.Command.Default;
 
-public class MKFile : TerminalCommand
+public class Save : TerminalCommand
 {
-    public MKFile(VirtualEnvironment env) : base(env)
+    public Save(VirtualEnvironment env) : base(env)
     {
     }
 
     public override IEnumerator RunCommand(string[] args)
     {
-        if (args.Length < 2)
+        if (args.Length < 3)
         {
-            yield return "Usage: mkfile <path>";
+            yield return "Usage: save <path> <data>";
             yield break;
         }
 
         string path = args[1];
+        string content = args[2];
 
         ProcessQuotedInput(ref path);
+        ProcessQuotedInput(ref content);
 
         //Resolve any . or .. characters
         //Console.WriteLine("resolving path");
@@ -28,9 +30,9 @@ public class MKFile : TerminalCommand
 
         //Console.WriteLine($"Final Path: {path}");
 
-        if (!env.MakeFile(path))
+        if (!env.FileWrite(path, content))
         {
-            yield return "Failed to create file";
+            yield return "Failed to save to file";
         }
     }
 }

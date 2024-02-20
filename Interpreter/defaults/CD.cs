@@ -1,6 +1,7 @@
 using System.Collections;
 using LlamaFS.ENV;
 using LlamaFS.VFS;
+using LlamaFS.EXT;
 
 namespace LlamaFS.Command.Default;
 
@@ -27,13 +28,19 @@ public class ChangeDirectory : TerminalCommand
 
         var info = env.StatPathNode(path);
 
+        if (info.node.nodeType != NodeType.Directory)
+        {
+            yield return "Error: path is not a directory";
+            yield break;
+        }
+
         if (info.state.IsNullorDeleted())
         {
             yield return "Error: path is null or deleted";
             yield break;
         }
 
-        yield return $"Setting CWD: {path}";
+        //yield return $"Setting CWD: {path}";
         env.SetEnvVariable("$CWD", path);
     }
 }

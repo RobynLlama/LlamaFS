@@ -1,13 +1,5 @@
 namespace LlamaFS.VFS;
 
-public static class NodeStateExt
-{
-    public static bool IsNullorDeleted(this VirtualFileSystem.NodeState state)
-    {
-        return state == VirtualFileSystem.NodeState.Null || state == VirtualFileSystem.NodeState.Deleted;
-    }
-}
-
 public partial class VirtualFileSystem
 {
     public int FileCreate(int Parent, string Name)
@@ -40,7 +32,7 @@ public partial class VirtualFileSystem
         NodeRename(ID, Name);
     }
 
-    public void FileRead(int ID) => NodeOpen(ID);
+    public string FileRead(int ID) => NodeOpen(ID);
     public void FileWrite(int ID, string contents)
     {
         if (contents.Length > MaxFileContentLength)
