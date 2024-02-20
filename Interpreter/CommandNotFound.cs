@@ -13,5 +13,10 @@ public class CommandNotFound : TerminalCommand
     public override IEnumerator RunCommand(string[] args)
     {
         yield return $"Command not found {args[0]}";
+
+        foreach (string key in AllCommands.List.Keys)
+        {
+            yield return key;
+        }
     }
 }
