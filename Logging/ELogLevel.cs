@@ -4,5 +4,11 @@ public enum LogLevel
 {
     Info,
     Warn,
-    Error,
+    Error
+}
+
+public enum LogStream
+{
+    Logging,
+    Output
 }

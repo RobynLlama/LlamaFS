@@ -7,25 +7,30 @@ public class LogManager
 {
     //I LOVE SINGLETONS
     public static LogManager Instance { get; } = new();
-    protected List<ILogWriter> logWriters = new();
+    protected Dictionary<LogStream, List<ILogWriter>> LogRegistry = new();
 
-    public LogManager() { }
-
-    internal void WriteToLogs(LogLevel level, string message)
+    public LogManager()
     {
-        foreach (ILogWriter log in logWriters)
+        //Init registry
+        LogRegistry.Add(LogStream.Logging, new());
+        LogRegistry.Add(LogStream.Output, new());
+    }
+
+    internal void WriteToStream(LogLevel level, string message, LogStream stream = LogStream.Logging)
+    {
+        foreach (ILogWriter log in LogRegistry[stream])
         {
             log.Log(level, message);
         }
     }
 
-    public void RegisterLogWriter(ILogWriter writer)
+    public void RegisterLogWriterToStream(LogStream stream, ILogWriter writer)
     {
-        if (logWriters.Contains(writer))
+        if (LogRegistry[stream].Contains(writer))
         {
             return;
         }
 
-        logWriters.Add(writer);
+        LogRegistry[stream].Add(writer);
     }
 }
