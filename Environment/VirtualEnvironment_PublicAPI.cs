@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using LlamaFS.EXT;
 using LlamaFS.VFS;
 
 namespace LlamaFS.ENV;
@@ -95,35 +96,31 @@ public partial class VirtualEnvironment
         ResolveMountedVFS(Path).vfs.NodeGetChildren(directory.node.UUID, children);
     }
 
-    public bool MakeDirectory(string Path)
+    public bool MakeFile(string Path) => MakeNode(NodeType.File, Path);
+    public bool MakeDirectory(string Path) => MakeNode(NodeType.Directory, Path);
+    public bool FileWrite(string Path, string Content)
     {
-        string ParentPath = Path + "..";
-        string Name;
-        ResolvePath(ref ParentPath);
-
-        Name = Path.Replace(ParentPath, "").Replace("/", "");
-        VirtualFileSystem vfs;
-
-        (vfs, ParentPath) = ResolveMountedVFS(ParentPath);
-
-        //Console.WriteLine($"Parent: {ParentPath} Name: {Path}");
-
-        var info = GetNodeFromPath(ParentPath);
-        var child = GetNodeFromPath(Path);
+        var info = GetNodeFromPath(Path);
 
         if (info.state.IsNullorDeleted())
         {
             return false;
         }
 
-        if (!child.state.IsNullorDeleted())
+        ResolveMountedVFS(Path).vfs.FileWrite(info.node.UUID, Content);
+        return true;
+
+    }
+    public string FileRead(string Path)
+    {
+        var info = GetNodeFromPath(Path);
+
+        if (info.state.IsNullorDeleted())
         {
-            return false;
+            throw new FileSystemException(ResolveMountedVFS(Path).vfs.UUID, "Unable to open file for reading");
         }
 
-        vfs.DirCreate(info.node.UUID, Name);
-
-        return true;
+        return ResolveMountedVFS(Path).vfs.FileRead(info.node.UUID);
     }
 
     public (Node node, VirtualFileSystem.NodeState state) StatPathNode(string Path)

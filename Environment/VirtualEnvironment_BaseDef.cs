@@ -1,7 +1,6 @@
-using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using LlamaFS.VFS;
+using LlamaFS.EXT;
 
 namespace LlamaFS.ENV;
 public partial class VirtualEnvironment
@@ -70,5 +69,46 @@ public partial class VirtualEnvironment
         }
 
         return (new Node(), VirtualFileSystem.NodeState.Null);
+    }
+
+    internal bool MakeNode(NodeType type, string Path)
+    {
+        string ParentPath = Path + "..";
+        string Name;
+        ResolvePath(ref ParentPath);
+
+        Name = Path.Replace(ParentPath, "").Replace("/", "");
+        VirtualFileSystem vfs;
+
+        (vfs, ParentPath) = ResolveMountedVFS(ParentPath);
+
+        //LogManager.Instance.WriteToStream(LogLevel.Info, $"Parent: {ParentPath} Name: {Path}");
+
+        var info = GetNodeFromPath(ParentPath);
+        var child = GetNodeFromPath(Path);
+
+        if (info.state.IsNullorDeleted())
+        {
+            //LogManager.Instance.WriteToStream(LogLevel.Warn, "Parent is null or deleted");
+            return false;
+        }
+
+        if (!child.state.IsNullorDeleted())
+        {
+            //LogManager.Instance.WriteToStream(LogLevel.Warn, "Child already exists");
+            return false;
+        }
+
+        switch (type)
+        {
+            case NodeType.File:
+                vfs.FileCreate(info.node.UUID, Name);
+                return true;
+            case NodeType.Directory:
+                vfs.DirCreate(info.node.UUID, Name);
+                return true;
+            default:
+                return false;
+        }
     }
 }
