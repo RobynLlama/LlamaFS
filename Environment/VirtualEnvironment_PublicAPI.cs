@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using LlamaFS.VFS;
@@ -34,8 +33,51 @@ public partial class VirtualEnvironment
 
     public void ResolvePath(ref string path)
     {
-        //Remove the CWD dot
-        path = path.Replace("/.", "");
+        //Console.WriteLine($"Start Path: {path}");
+        ResolveEnvVariables(ref path);
+
+        //check if path is relative
+        if (path[0] != '/')
+        {
+            path = GetEnvVariable("$CWD") + path;
+        }
+
+        string[] strings = path.Split('/');
+        path = "/";
+
+        Stack<string> list = new();
+
+        string prev;
+
+        foreach (string item in strings)
+        {
+            if (string.IsNullOrEmpty(item))
+                continue;
+
+            switch (item)
+            {
+                case ".":
+                    continue;
+                case "..":
+                    //delete the previous entry
+                    if (list.Count == 0)
+                        continue;
+
+                    prev = list.Pop();
+                    path = path.Substring(0, path.Length - (prev.Length + 1));
+                    break;
+                default:
+                    //Add an entry to the path
+                    //Console.WriteLine($"Pushing {item}");
+                    list.Push(item);
+                    path += $"{item}/";
+                    break;
+            }
+
+            //Just to be sure :)
+            if (path[^1] != '/')
+                path += "/";
+        }
     }
     #endregion
 
@@ -51,6 +93,37 @@ public partial class VirtualEnvironment
             return;
 
         ResolveMountedVFS(Path).vfs.NodeGetChildren(directory.node.UUID, children);
+    }
+
+    public bool MakeDirectory(string Path)
+    {
+        string ParentPath = Path + "..";
+        string Name;
+        ResolvePath(ref ParentPath);
+
+        Name = Path.Replace(ParentPath, "").Replace("/", "");
+        VirtualFileSystem vfs;
+
+        (vfs, ParentPath) = ResolveMountedVFS(ParentPath);
+
+        //Console.WriteLine($"Parent: {ParentPath} Name: {Path}");
+
+        var info = GetNodeFromPath(ParentPath);
+        var child = GetNodeFromPath(Path);
+
+        if (info.state.IsNullorDeleted())
+        {
+            return false;
+        }
+
+        if (!child.state.IsNullorDeleted())
+        {
+            return false;
+        }
+
+        vfs.DirCreate(info.node.UUID, Name);
+
+        return true;
     }
 
     public (Node node, VirtualFileSystem.NodeState state) StatPathNode(string Path)

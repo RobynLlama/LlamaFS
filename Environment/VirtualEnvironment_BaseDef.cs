@@ -22,12 +22,7 @@ public partial class VirtualEnvironment
 
     internal (Node node, VirtualFileSystem.NodeState state) GetNodeFromPath(string Path)
     {
-        //Resolve all Env variables
-        ResolveEnvVariables(ref Path);
-
-        //Append CWD here if the path doesn't start with /
-        if (Path[0] != '/')
-            Path = GetEnvVariable("$CWD") + Path;
+        //Console.WriteLine("GetNodeFromPath:");
 
         //Resolve . and .. like a real filesystem
         ResolvePath(ref Path);
@@ -49,7 +44,7 @@ public partial class VirtualEnvironment
             if (string.IsNullOrEmpty(item))
                 continue;
 
-            if (current.state == VirtualFileSystem.NodeState.Null || current.state == VirtualFileSystem.NodeState.Deleted)
+            if (current.state.IsNullorDeleted())
             {
                 return current;
             }
