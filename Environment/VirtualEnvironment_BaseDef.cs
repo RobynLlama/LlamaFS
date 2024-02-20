@@ -1,19 +1,79 @@
+using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using LlamaFS.VFS;
 
 namespace LlamaFS.ENV;
 public partial class VirtualEnvironment
 {
-    protected readonly List<int> MountedVFS = new();
+    protected readonly Dictionary<string, int> MountedVFS = new();
     public int PrimaryVFS { get; protected set; }
     public int UUID { get; }
     protected Dictionary<string, string> variables = new()
     {
         {"$HOME",""},
-        {"$CWD",@"\"}
+        {"$CWD",@"/"}
     };
 
     public VirtualEnvironment(int UUID)
     {
         this.UUID = UUID;
+    }
+
+    internal (Node node, VirtualFileSystem.NodeState state) GetNodeFromPath(string Path)
+    {
+        //Resolve all Env variables
+        ResolveEnvVariables(ref Path);
+
+        //Append CWD here if the path doesn't start with /
+        if (Path[0] != '/')
+            Path = GetEnvVariable("$CWD") + Path;
+
+        //Resolve . and .. like a real filesystem
+        ResolvePath(ref Path);
+
+        //Trim the path to just the final VFS if we're not on the primary
+        (VirtualFileSystem vfs, Path) = ResolveMountedVFS(Path);
+
+        //Split the string into parts for traversal
+        string[] list = Path[1..].Split('/');
+
+        //Set the current node to the root node of the VFS
+        var current = vfs.NodeGet(0);
+
+        //Console.WriteLine($"Resolved Path: {Path}");
+
+        foreach (string item in list)
+        {
+
+            if (string.IsNullOrEmpty(item))
+                continue;
+
+            if (current.state == VirtualFileSystem.NodeState.Null || current.state == VirtualFileSystem.NodeState.Deleted)
+            {
+                return current;
+            }
+
+            //Console.WriteLine($"Looking for {item} in {current.node.Name}");
+            current = GetChildByName(vfs, current.node.UUID, item);
+        }
+
+        return current;
+    }
+
+    internal (Node node, VirtualFileSystem.NodeState state) GetChildByName(VirtualFileSystem vfs, int Parent, string Name)
+    {
+        List<Node> children = new();
+        vfs.NodeGetChildren(Parent, children);
+
+        foreach (Node child in children)
+        {
+            if (child.Name == Name)
+            {
+                return vfs.NodeGet(child.UUID);
+            }
+        }
+
+        return (new Node(), VirtualFileSystem.NodeState.Null);
     }
 }
