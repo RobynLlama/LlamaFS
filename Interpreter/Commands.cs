@@ -7,7 +7,7 @@ namespace LlamaFS.Command;
 
 public static class AllCommands
 {
-    private static Dictionary<string, Type> List = new();
+    internal static Dictionary<string, Type> List = new();
 
     public static void RegisterCommand(string commandKey, Type commandType)
     {
