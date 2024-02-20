@@ -1,6 +1,5 @@
 using System.Collections;
 using LlamaFS.ENV;
-using LlamaFS.LOG;
 
 namespace LlamaFS.Command;
 
@@ -14,7 +13,7 @@ public class CommandNotFound : TerminalCommand
     {
         yield return $"Command not found {args[0]}";
 
-        foreach (string key in AllCommands.List.Keys)
+        foreach (string key in AllCommands.CommandRegistry.Keys)
         {
             yield return key;
         }
