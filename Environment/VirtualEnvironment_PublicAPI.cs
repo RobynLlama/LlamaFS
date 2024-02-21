@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using LlamaFS.EXT;
 using LlamaFS.LOG;
 using LlamaFS.VFS;
@@ -8,6 +10,29 @@ using LlamaFS.VFS;
 namespace LlamaFS.ENV;
 public partial class VirtualEnvironment
 {
+
+    public void Save(Stream output)
+    {
+        StreamWriter stream = new(output);
+
+        string mounts = string.Empty;
+
+        foreach (int key in MountedVFS.Keys)
+        {
+            mounts += $"{key},{MountedVFS[key]}";
+        }
+
+        string vars = string.Empty;
+
+        foreach (string key in variables.Keys)
+        {
+            vars += $"{key},{variables[key]}";
+        }
+
+        //stream.WriteLine($"ENV:{UUID}:{rootVFS}:{mounts}:{vars}");
+        stream.WriteLine($"ENV:{Convert.ToBase64String(Encoding.UTF8.GetBytes($"{UUID}:{rootVFS}:{mounts}:{vars}"))}");
+        stream.Flush();
+    }
 
     #region Env
     public string GetEnvVariable(string name)
@@ -97,7 +122,7 @@ public partial class VirtualEnvironment
         if (directory.node.nodeType != NodeType.Directory)
             return;
 
-        VFSManager.Instance.GetVFS(directory.vfs).NodeGetChildren(directory.node.UUID, children);
+        VFSManager.Instance.Get(directory.vfs).NodeGetChildren(directory.node.UUID, children);
     }
 
     public bool MakeFile(string Path) => MakeNode(NodeType.File, Path);
@@ -124,7 +149,7 @@ public partial class VirtualEnvironment
             throw new FileSystemException(info.vfs, "Unable to open file for reading");
         }
 
-        return VFSManager.Instance.GetVFS(info.vfs).FileOpen(info.node.UUID, mode);
+        return VFSManager.Instance.Get(info.vfs).FileOpen(info.node.UUID, mode);
     }
 
     public (NodeState state, NodeType type) StatPathNode(string Path)
@@ -199,7 +224,8 @@ public partial class VirtualEnvironment
 
                 string childName = path.Replace(ParentPath, "");
 
-                VFSManager.Instance.GetVFS(info.vfs).LinkCreate(parentInfo.node.Parent, childName, UUID, 0);
+                VFSManager.Instance.Get(info.vfs).LinkCreate(parentInfo.node.Parent, childName, UUID, 0);
+                MountedVFS.Add(UUID, path);
 
                 return true;
             case NodeState.Local:
@@ -210,7 +236,8 @@ public partial class VirtualEnvironment
                     return false;
                 }
 
-                VFSManager.Instance.GetVFS(info.vfs).LinkUpdate(info.node.UUID, UUID, 0, NodeType.Link);
+                VFSManager.Instance.Get(info.vfs).LinkUpdate(info.node.UUID, UUID, 0, NodeType.Link);
+                MountedVFS.Add(UUID, path);
 
                 return true;
             default:
@@ -241,7 +268,7 @@ public partial class VirtualEnvironment
         var info = GetNodeFromPath(unmountPath);
 
         //Probably should be safer here but w/e
-        VFSManager.Instance.GetVFS(info.vfs).LinkUpdate(info.node.UUID, 0, 0, NodeType.Directory);
+        VFSManager.Instance.Get(info.vfs).LinkUpdate(info.node.UUID, 0, 0, NodeType.Directory);
         //Remove from mounted list
         MountedVFS.Remove(UUID);
 

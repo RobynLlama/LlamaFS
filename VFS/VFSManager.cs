@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace LlamaFS.VFS;
 
@@ -11,7 +12,7 @@ public class VFSManager
 
     public VFSManager() { }
 
-    public VirtualFileSystem CreateVFS(int UUID, int Master)
+    public VirtualFileSystem Create(int UUID, int Master)
     {
         if (AllVFS.ContainsKey(UUID))
         {
@@ -25,7 +26,7 @@ public class VFSManager
         return NewVFS;
     }
 
-    public VirtualFileSystem GetVFS(int UUID)
+    public VirtualFileSystem Get(int UUID)
     {
         if (AllVFS.ContainsKey(UUID))
         {
@@ -41,5 +42,13 @@ public class VFSManager
             return;
 
         AllVFS.Add(vfs.UUID, vfs);
+    }
+
+    public void Save(Stream output)
+    {
+        foreach (int key in AllVFS.Keys)
+        {
+            AllVFS[key].Save(output);
+        }
     }
 }

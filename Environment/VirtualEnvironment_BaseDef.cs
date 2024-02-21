@@ -27,7 +27,7 @@ public partial class VirtualEnvironment
         ResolvePath(ref Path);
 
         //Start on the root VFS
-        VirtualFileSystem vfs = VFSManager.Instance.GetVFS(rootVFS);
+        VirtualFileSystem vfs = VFSManager.Instance.Get(rootVFS);
 
         //Split the string into parts for traversal
         string[] list = Path[1..].Split('/');
@@ -58,7 +58,7 @@ public partial class VirtualEnvironment
                 if (current.node.vfsUUID != 0)
                 {
                     //LogManager.Instance.WriteToStream(LogLevel.Info, $"Changing to VFS {current.node.vfsUUID}");
-                    vfs = VFSManager.Instance.GetVFS(current.node.vfsUUID);
+                    vfs = VFSManager.Instance.Get(current.node.vfsUUID);
                 }
 
                 //Get the new current node
@@ -93,7 +93,7 @@ public partial class VirtualEnvironment
         ResolvePath(ref ParentPath);
 
         Name = Path.Replace(ParentPath, "").Replace("/", "");
-        VirtualFileSystem vfs = VFSManager.Instance.GetVFS(rootVFS);
+        VirtualFileSystem vfs = VFSManager.Instance.Get(rootVFS);
 
         //LogManager.Instance.WriteToStream(LogLevel.Info, $"Parent: {ParentPath} Name: {Name}");
 
@@ -115,10 +115,10 @@ public partial class VirtualEnvironment
         switch (type)
         {
             case NodeType.File:
-                VFSManager.Instance.GetVFS(info.vfs).FileCreate(info.node.UUID, Name);
+                VFSManager.Instance.Get(info.vfs).FileCreate(info.node.UUID, Name);
                 return true;
             case NodeType.Directory:
-                VFSManager.Instance.GetVFS(info.vfs).DirCreate(info.node.UUID, Name);
+                VFSManager.Instance.Get(info.vfs).DirCreate(info.node.UUID, Name);
                 return true;
             default:
                 return false;

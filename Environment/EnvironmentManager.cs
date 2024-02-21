@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace LlamaFS.ENV;
 
@@ -11,19 +13,33 @@ public class EnvironmentManager
 
     public EnvironmentManager() { }
 
-    public VirtualEnvironment GetOrCreateEnvironment(int UUID)
+    public VirtualEnvironment Create(int UUID)
     {
-
         if (AllEnvs.ContainsKey(UUID))
         {
-            //Todo: logging callback
-            return AllEnvs[UUID];
+            throw new ArgumentException($"Duplicate UUID in EnvManager {UUID}", "UUID");
         }
 
-        //Todo: Logging callback
+        VirtualEnvironment env = new(UUID);
+        AllEnvs.Add(UUID, env);
+        return env;
+    }
 
-        VirtualEnvironment temp = new(UUID);
-        AllEnvs.Add(UUID, temp);
-        return temp;
+    public VirtualEnvironment Get(int UUID)
+    {
+        if (!AllEnvs.ContainsKey(UUID))
+        {
+            throw new ArgumentException($"UUID not in EnvManager {UUID}", "UUID");
+        }
+
+        return AllEnvs[UUID];
+    }
+
+    public void Save(Stream output)
+    {
+        foreach (int key in AllEnvs.Keys)
+        {
+            AllEnvs[key].Save(output);
+        }
     }
 }

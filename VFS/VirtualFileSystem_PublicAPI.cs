@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Text;
 using LlamaFS.EXT;
 
 namespace LlamaFS.VFS;
@@ -13,10 +15,11 @@ public partial class VirtualFileSystem
 
         foreach (int item in DeletedRecords)
         {
-            delList += item.ToString();
+            delList += item.ToString() + ",";
         }
 
-        stream.WriteLine($"VFS:{NextFileID}:{UUID}:{MasterUUID}:{delList}");
+        stream.WriteLine($"VFS:{Convert.ToBase64String(Encoding.UTF8.GetBytes($"{NextFileID}:{UUID}:{MasterUUID}:{delList}"))}");
+        stream.Flush();
 
         foreach (Node item in FileTable.Values)
         {
@@ -28,9 +31,8 @@ public partial class VirtualFileSystem
         foreach (int item in NodeData.Keys)
         {
             fileStream = NodeData[item];
-            stream.Write($"STREAM:{item}:");
             fileStream.Position = 0;
-            fileStream.CopyTo(output);
+            stream.WriteLine($"STREAM:{item}:{Convert.ToBase64String(fileStream.ToArray())}");
         }
 
         stream.Flush();

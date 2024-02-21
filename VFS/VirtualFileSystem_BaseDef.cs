@@ -12,7 +12,6 @@ public partial class VirtualFileSystem
     protected Dictionary<int, Node> FileTable = new();
     protected readonly Dictionary<int, MemoryStream> NodeData = new();
     protected List<int> DeletedRecords = new();
-    public int MaxFileSize { get; } = 350;
     public int UUID { get; }
     public int MasterUUID { get; protected set; } = 0;
     public static int MaxFileNameLength = 12;
@@ -26,7 +25,7 @@ public partial class VirtualFileSystem
 
         if (MasterUUID != 0)
         {
-            NextFileID = VFSManager.Instance.GetVFS(MasterUUID).NextFileID;
+            NextFileID = VFSManager.Instance.Get(MasterUUID).NextFileID;
         };
 
     }
@@ -39,7 +38,7 @@ public partial class VirtualFileSystem
     internal int GetNextID()
     {
         if (MasterUUID != 0)
-            return VFSManager.Instance.GetVFS(MasterUUID).GetNextID();
+            return VFSManager.Instance.Get(MasterUUID).GetNextID();
 
         return ++NextFileID;
     }
@@ -62,7 +61,7 @@ public partial class VirtualFileSystem
         return state switch
         {
             NodeState.Local => (FileTable[ID], state),
-            NodeState.Master => (VFSManager.Instance.GetVFS(MasterUUID).NodeGet(ID).node, state),
+            NodeState.Master => (VFSManager.Instance.Get(MasterUUID).NodeGet(ID).node, state),
             NodeState.Root => (rootNode, NodeState.Root),
             _ => throw new FileSystemNodeException(ID, UUID, "Node does not exist on VFS or any Master"),
         };
@@ -82,7 +81,7 @@ public partial class VirtualFileSystem
             return NodeState.Null;
         else
         {
-            NodeState state = VFSManager.Instance.GetVFS(MasterUUID).NodeGetState(ID);
+            NodeState state = VFSManager.Instance.Get(MasterUUID).NodeGetState(ID);
             if (state == NodeState.Local || state == NodeState.Master)
                 return NodeState.Master;
 
@@ -103,7 +102,7 @@ public partial class VirtualFileSystem
 
         if (MasterUUID != 0)
         {
-            VFSManager.Instance.GetVFS(MasterUUID).NodeGetChildren(Parent, nodes);
+            VFSManager.Instance.Get(MasterUUID).NodeGetChildren(Parent, nodes);
         }
     }
 
