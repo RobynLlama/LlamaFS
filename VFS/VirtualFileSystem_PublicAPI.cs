@@ -16,13 +16,24 @@ public partial class VirtualFileSystem
             delList += item.ToString();
         }
 
-        stream.WriteLine($"VFS:{NextFileID}:{UUID}:{MasterUUID}:{MaxFileNameLength}:{MaxFileContentLength}:{delList}");
-        stream.Flush();
+        stream.WriteLine($"VFS:{NextFileID}:{UUID}:{MasterUUID}:{delList}");
 
         foreach (Node item in FileTable.Values)
         {
             item.Save(output);
         }
+
+        MemoryStream fileStream;
+
+        foreach (int item in NodeData.Keys)
+        {
+            fileStream = NodeData[item];
+            stream.Write($"STREAM:{item}:");
+            fileStream.Position = 0;
+            fileStream.CopyTo(output);
+        }
+
+        stream.Flush();
     }
     public int FileCreate(int Parent, string Name)
     {

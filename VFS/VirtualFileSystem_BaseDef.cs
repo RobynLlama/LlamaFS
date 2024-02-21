@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
+using LlamaFS.EXT;
 using LlamaFS.LOG;
 
 namespace LlamaFS.VFS;
@@ -13,16 +15,14 @@ public partial class VirtualFileSystem
     public int MaxFileSize { get; } = 350;
     public int UUID { get; }
     public int MasterUUID { get; protected set; } = 0;
-    public int MaxFileNameLength { get; protected set; } = 12;
-    public int MaxFileContentLength { get; protected set; } = 300;
+    public static int MaxFileNameLength = 12;
+    public static int MaxFileContent = 300;
     private Node rootNode = new(NodeType.Directory, -1, "ROOT", 0);
 
-    public VirtualFileSystem(int UUID, int MasterUUID, int MaxFileName, int MaxFileLength)
+    public VirtualFileSystem(int UUID, int MasterUUID)
     {
         this.UUID = UUID;
         this.MasterUUID = MasterUUID;
-        MaxFileNameLength = MaxFileName;
-        MaxFileContentLength = MaxFileLength;
 
         if (MasterUUID != 0)
         {
@@ -36,8 +36,11 @@ public partial class VirtualFileSystem
     /*********************************************
         INTERNAL FUNCTIONS
     *********************************************/
-    protected int GetNextID()
+    internal int GetNextID()
     {
+        if (MasterUUID != 0)
+            return VFSManager.Instance.GetVFS(MasterUUID).GetNextID();
+
         return ++NextFileID;
     }
     #endregion
@@ -136,6 +139,32 @@ public partial class VirtualFileSystem
         return newNode.UUID;
     }
 
+    internal int LinkCreate(int Parent, string Name, int TargetVFS, int TargetNode)
+    {
+        int parentInfo = NodeCreate(NodeType.Link, Parent, Name);
+        LinkUpdate(parentInfo, TargetVFS, TargetNode);
+
+        return parentInfo;
+    }
+
+    internal bool LinkUpdate(int ID, int TargetVFS, int TargetNode, NodeType type = NodeType.Link)
+    {
+        var nodeInfo = NodeGet(ID);
+
+        if (nodeInfo.state.IsNullorDeleted())
+        {
+            return false;
+        }
+
+        if (nodeInfo.node.nodeType == NodeType.Link || nodeInfo.node.nodeType == NodeType.Directory)
+        {
+            Node oldNode = nodeInfo.node;
+            FileTable[ID] = new(type, oldNode.Parent, oldNode.Name, oldNode.UUID, TargetNode, TargetVFS);
+        }
+
+        return false;
+    }
+
     protected void NodeDeleteTree(int ID)
     {
         var NodeInfo = NodeGet(ID);
@@ -192,8 +221,8 @@ public partial class VirtualFileSystem
                 throw new FileSystemNodeException(ID, UUID, "Trying to rename root pseudo-node");
         }
 
-        NodeInfo.node.Name = Name;
-        FileTable[ID] = NodeInfo.node;
+        Node oldNode = NodeInfo.node;
+        FileTable[ID] = new Node(oldNode.nodeType, oldNode.Parent, Name, oldNode.UUID, oldNode.LinkUUID, oldNode.vfsUUID);
     }
 
     protected MemoryStream NodeOpen(int ID, NodeFileMode mode)

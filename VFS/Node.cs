@@ -13,25 +13,21 @@ public enum NodeType
 public struct Node
 {
     public readonly NodeType nodeType;
-    public int Parent { internal set; get; }
-    public string Name;
+    public readonly int Parent;
+    public readonly string Name;
     public readonly int LinkUUID;
+    public readonly int vfsUUID;
     public readonly int UUID;
 
-    public Node(NodeType type, int parent, string name, int UUID)
+    public Node(NodeType type, int parent, string name, int UUID, int Link = 0, int VFS = 0)
     {
         nodeType = type;
         Parent = parent;
         Name = name;
         this.UUID = UUID;
+        LinkUUID = Link;
+        vfsUUID = VFS;
     }
 
-    public Node(Node node, string name)
-    {
-        nodeType = node.nodeType;
-        Parent = node.Parent;
-        Name = name;
-        UUID = node.UUID;
-    }
 
 }
