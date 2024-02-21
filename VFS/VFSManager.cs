@@ -11,7 +11,7 @@ public class VFSManager
 
     public VFSManager() { }
 
-    public VirtualFileSystem CreateVFS(int UUID, int Master, int MaxFileName, int MaxFileContent)
+    public VirtualFileSystem CreateVFS(int UUID, int Master)
     {
         if (AllVFS.ContainsKey(UUID))
         {
@@ -32,7 +32,7 @@ public class VFSManager
             return AllVFS[UUID];
         }
 
-        throw new ArgumentOutOfRangeException("UUID", "The UUID does not exist in VFS List");
+        throw new ArgumentOutOfRangeException("UUID", $"The UUID does not exist in VFS List {UUID}");
     }
 
     public void AddVFS(VirtualFileSystem vfs)
