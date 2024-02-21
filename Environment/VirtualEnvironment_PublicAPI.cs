@@ -88,6 +88,7 @@ public partial class VirtualEnvironment
     #region File Commands
     public void ListDirectory(string Path, List<Node> children)
     {
+        ResolvePath(ref Path);
         var directory = GetNodeFromPath(Path);
 
         //Console.WriteLine($"Listing: {Path}\nNodeID: {directory.node.UUID}");

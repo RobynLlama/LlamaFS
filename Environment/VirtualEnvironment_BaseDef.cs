@@ -87,6 +87,7 @@ public partial class VirtualEnvironment
 
     internal bool MakeNode(NodeType type, string Path)
     {
+        ResolvePath(ref Path);
         string ParentPath = Path + "..";
         string Name;
         ResolvePath(ref ParentPath);
@@ -94,7 +95,7 @@ public partial class VirtualEnvironment
         Name = Path.Replace(ParentPath, "").Replace("/", "");
         VirtualFileSystem vfs = VFSManager.Instance.GetVFS(rootVFS);
 
-        //LogManager.Instance.WriteToStream(LogLevel.Info, $"Parent: {ParentPath} Name: {Path}");
+        //LogManager.Instance.WriteToStream(LogLevel.Info, $"Parent: {ParentPath} Name: {Name}");
 
         var info = GetNodeFromPath(ParentPath);
         var child = GetNodeFromPath(Path);
