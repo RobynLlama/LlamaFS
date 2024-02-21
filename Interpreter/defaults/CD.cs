@@ -28,7 +28,7 @@ public class ChangeDirectory : TerminalCommand
 
         var info = env.StatPathNode(path);
 
-        if (info.node.nodeType != NodeType.Directory)
+        if (info.type != NodeType.Directory)
         {
             yield return "Error: path is not a directory";
             yield break;

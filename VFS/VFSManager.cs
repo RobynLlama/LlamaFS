@@ -18,7 +18,7 @@ public class VFSManager
             throw new ArgumentException("UUID already exists in VFS list, cannot create", "UUID");
         }
 
-        VirtualFileSystem NewVFS = new(UUID, Master, MaxFileName, MaxFileContent);
+        VirtualFileSystem NewVFS = new(UUID, Master);
         //Todo: logging callback
 
         AllVFS.Add(UUID, NewVFS);

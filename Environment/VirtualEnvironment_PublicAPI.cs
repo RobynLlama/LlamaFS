@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using LlamaFS.EXT;
+using LlamaFS.LOG;
 using LlamaFS.VFS;
 
 namespace LlamaFS.ENV;
@@ -80,6 +81,7 @@ public partial class VirtualEnvironment
             if (path[^1] != '/')
                 path += "/";
         }
+        //LogManager.Instance.WriteToStream(LogLevel.Info, $"Resolved: {path}");
     }
     #endregion
 
@@ -94,7 +96,7 @@ public partial class VirtualEnvironment
         if (directory.node.nodeType != NodeType.Directory)
             return;
 
-        ResolveMountedVFS(Path).vfs.NodeGetChildren(directory.node.UUID, children);
+        VFSManager.Instance.GetVFS(directory.vfs).NodeGetChildren(directory.node.UUID, children);
     }
 
     public bool MakeFile(string Path) => MakeNode(NodeType.File, Path);
@@ -118,88 +120,131 @@ public partial class VirtualEnvironment
 
         if (info.state.IsNullorDeleted())
         {
-            throw new FileSystemException(ResolveMountedVFS(Path).vfs.UUID, "Unable to open file for reading");
+            throw new FileSystemException(info.vfs, "Unable to open file for reading");
         }
 
-        return ResolveMountedVFS(Path).vfs.FileOpen(info.node.UUID, mode);
+        return VFSManager.Instance.GetVFS(info.vfs).FileOpen(info.node.UUID, mode);
     }
 
-    public MemoryStream FileOpen(int ID, string Path, NodeFileMode mode) => ResolveMountedVFS(Path).vfs.FileOpen(ID, mode);
-
-    public (Node node, NodeState state) StatPathNode(string Path)
+    public (NodeState state, NodeType type) StatPathNode(string Path)
     {
-        return GetNodeFromPath(Path);
+        var info = GetNodeFromPath(Path);
+        return (info.state, info.node.nodeType);
     }
     #endregion
 
     #region VFS Operations
     //Todo: Implement checking for mount points
-    public (VirtualFileSystem vfs, string path) ResolveMountedVFS(string Path)
+    /* public (VirtualFileSystem vfs, string path) ResolveMountedVFS(string Path)
     {
-        return (VFSManager.Instance.GetVFS(PrimaryVFS), Path);
-    }
-    public bool MountPrimaryFilesystem(int UUID)
-    {
-        //Check if we're mounting the same FS
-        if (PrimaryVFS == UUID)
-            return false;
+        int size = 0;
+        string mount_point = string.Empty;
+        int ID = 0;
 
-        //Unmount the FS if its already in our list to avoid duplicates
-        UnmountFilesystemByVFS(UUID);
-
-        //Set it to primary
-        PrimaryVFS = UUID;
-        return true;
-    }
+        foreach (int vfs in MountedVFS.Keys)
+        {
+            if (Path.StartsWith(MountedVFS[vfs]))
+            {
+                if (MountedVFS[vfs].Length > size)
+                {
+                    size = MountedVFS[vfs].Length;
+                    mount_point = Path.Replace(MountedVFS[vfs], "");
+                    ID = vfs;
+                }
+            }
+        }
+    } */
 
     public bool MountFilesystem(int UUID, string path)
     {
-        //Exit if we already have this FS in our list or primary
-        if (PrimaryVFS == UUID || MountedVFS.ContainsValue(UUID) || MountedVFS.ContainsKey(path))
-        {
-            return false;
-        }
 
-        MountedVFS.Add(path, UUID);
-        return true;
-    }
+        //Resolve path
+        ResolvePath(ref path);
 
-    public bool UnmountFilesystemByPath(string path)
-    {
-        //Only unmount FS that are in our mount list
-        if (MountedVFS.ContainsKey(path))
+        //Mount to primary if we target root
+        if (path == "/")
         {
-            MountedVFS.Remove(path);
+            rootVFS = UUID;
             return true;
         }
 
-        return false;
-    }
-
-    public bool UnmountFilesystemByVFS(int UUID)
-    {
-        if (PrimaryVFS == UUID)
-            return false;
-
-        if (MountedVFS.ContainsValue(UUID))
+        //Exit if we already have this FS in our list
+        if (MountedVFS.ContainsKey(UUID))
         {
+            return false;
+        }
 
-            IEnumerator keys = MountedVFS.Keys.GetEnumerator();
+        //Exit if this exact path is already used
+        foreach (int key in MountedVFS.Keys)
+        {
+            if (MountedVFS[key] == path)
+                return false;
+        }
 
-            while (keys.MoveNext())
-            {
-                string key = (string)keys.Current;
+        var info = GetNodeFromPath(path);
 
-                if (MountedVFS[key] == UUID)
+        switch (info.state)
+        {
+            case NodeState.Null:
+            case NodeState.Deleted:
+                //Clear to add a new link
+                string ParentPath = path + "/..";
+                ResolvePath(ref ParentPath);
+
+                var parentInfo = GetNodeFromPath(ParentPath);
+
+                if (parentInfo.state.IsNullorDeleted())
+                    return false;
+
+                string childName = path.Replace(ParentPath, "");
+
+                VFSManager.Instance.GetVFS(info.vfs).LinkCreate(parentInfo.node.Parent, childName, UUID, 0);
+
+                return true;
+            case NodeState.Local:
+            case NodeState.Master:
+                //Check if the file is a directory
+                if (info.node.nodeType != NodeType.Directory)
                 {
-                    MountedVFS.Remove(key);
+                    return false;
                 }
-            }
 
-            return true;
+                VFSManager.Instance.GetVFS(info.vfs).LinkUpdate(info.node.UUID, UUID, 0, NodeType.Link);
+
+                return true;
+            default:
+                return false;
         }
 
-        return false;
+    }
+
+    public bool UnmountFilesystem(int UUID)
+    {
+        if (!MountedVFS.ContainsKey(UUID))
+        {
+            return false;
+        }
+
+        string unmountPath = MountedVFS[UUID];
+
+        foreach (int key in MountedVFS.Keys)
+        {
+            if (MountedVFS[key].StartsWith(unmountPath))
+                if (MountedVFS[key] != unmountPath)
+                {
+                    LogManager.Instance.WriteToStream(LogLevel.Warn, "Unable to unmount {UUID} because another FS is mounted below its root");
+                    return false;
+                }
+        }
+
+        var info = GetNodeFromPath(unmountPath);
+
+        //Probably should be safer here but w/e
+        VFSManager.Instance.GetVFS(info.vfs).LinkUpdate(info.node.UUID, 0, 0, NodeType.Directory);
+        //Remove from mounted list
+        MountedVFS.Remove(UUID);
+
+        return true;
     }
     #endregion
 

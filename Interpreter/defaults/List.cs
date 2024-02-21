@@ -34,18 +34,10 @@ public class ListDirectory : TerminalCommand
 
         yield return $"Contents of {path}\n";
 
-        int spacing = env.ResolveMountedVFS(path).vfs.MaxFileNameLength;
-
-        MemoryStream stream;
-
         foreach (Node file in files)
         {
             switch (file.nodeType)
             {
-                case NodeType.File:
-                    stream = env.FileOpen(file.UUID, path, NodeFileMode.IO);
-                    yield return $" {file.Name.PadRight(spacing)} {stream.Length}b";
-                    break;
                 case NodeType.Directory:
                     yield return $" {file.Name}/";
                     break;
