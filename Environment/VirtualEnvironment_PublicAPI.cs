@@ -179,7 +179,7 @@ public partial class VirtualEnvironment
         if (info.state.IsNullOrDeleted())
             return false;
 
-        if (info.node.nodeType != NodeType.File)
+        if (info.node.nodeType != NodeType.Directory)
             return false;
 
         VFSManager.Instance.Get(info.vfs).DirRemove(info.node.UUID);
