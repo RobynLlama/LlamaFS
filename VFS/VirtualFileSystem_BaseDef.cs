@@ -10,7 +10,7 @@ public partial class VirtualFileSystem
 
     private int NextFileID = 0;
     protected Dictionary<int, Node> FileTable = new();
-    protected readonly Dictionary<int, MemoryStream> NodeData = new();
+    protected readonly Dictionary<int, VFSFileStream> NodeData = new();
     protected List<int> DeletedRecords = new();
     public int UUID { get; }
     public int MasterUUID { get; protected set; } = 0;
@@ -225,7 +225,7 @@ public partial class VirtualFileSystem
         FileTable[ID] = new Node(oldNode.nodeType, oldNode.Parent, Name, oldNode.UUID, oldNode.LinkUUID, oldNode.vfsUUID);
     }
 
-    protected MemoryStream NodeOpen(int ID, NodeFileMode mode)
+    protected VFSFileStream NodeOpen(int ID, NodeFileMode mode)
     {
         //Todo: copy on read?
         var NodeInfo = NodeGet(ID);
@@ -239,11 +239,11 @@ public partial class VirtualFileSystem
                 throw new FileSystemNodeException(ID, UUID, "Trying to read root pseudo-node");
         }
 
-        MemoryStream fileHandle;
+        VFSFileStream fileHandle;
 
         if (!NodeData.TryGetValue(ID, out fileHandle))
         {
-            fileHandle = new();
+            fileHandle = new(new(), UUID, ID);
             NodeData[ID] = fileHandle;
         }
 
@@ -257,9 +257,7 @@ public partial class VirtualFileSystem
                 fileHandle.Position = fileHandle.Length;
                 break;
             case NodeFileMode.Overwrite:
-                fileHandle.Dispose();
-                fileHandle = new();
-                NodeData[ID] = fileHandle;
+                fileHandle.RecycleUnderlyingStream();
                 break;
         }
 
