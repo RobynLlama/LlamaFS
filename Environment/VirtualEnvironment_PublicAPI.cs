@@ -157,6 +157,34 @@ public partial class VirtualEnvironment
         var info = GetNodeFromPath(Path);
         return (info.state, info.node.nodeType);
     }
+
+    public bool DeleteFile(string Path)
+    {
+        var info = GetNodeFromPath(Path);
+
+        if (info.state.IsNullOrDeleted())
+            return false;
+
+        if (info.node.nodeType != NodeType.File)
+            return false;
+
+        VFSManager.Instance.Get(info.vfs).FileRemove(info.node.UUID);
+        return true;
+    }
+
+    public bool DeleteDirectory(string Path)
+    {
+        var info = GetNodeFromPath(Path);
+
+        if (info.state.IsNullOrDeleted())
+            return false;
+
+        if (info.node.nodeType != NodeType.File)
+            return false;
+
+        VFSManager.Instance.Get(info.vfs).DirRemove(info.node.UUID);
+        return true;
+    }
     #endregion
 
     #region VFS Operations
