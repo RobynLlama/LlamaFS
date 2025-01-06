@@ -41,7 +41,7 @@ public partial class VirtualEnvironment
             if (string.IsNullOrEmpty(item))
                 continue;
 
-            if (current.state.IsNullorDeleted())
+            if (current.state.IsNullOrDeleted())
             {
                 return (current.node, current.state, vfs.UUID);
             }
@@ -100,13 +100,13 @@ public partial class VirtualEnvironment
         var info = GetNodeFromPath(ParentPath);
         var child = GetNodeFromPath(Path);
 
-        if (info.state.IsNullorDeleted())
+        if (info.state.IsNullOrDeleted())
         {
             //LogManager.Instance.WriteToStream(LogLevel.Warn, "Parent is null or deleted");
             return false;
         }
 
-        if (!child.state.IsNullorDeleted())
+        if (!child.state.IsNullOrDeleted())
         {
             //LogManager.Instance.WriteToStream(LogLevel.Warn, "Child already exists");
             return false;

@@ -34,7 +34,7 @@ public class ChangeDirectory : TerminalCommand
             yield break;
         }
 
-        if (info.state.IsNullorDeleted())
+        if (info.state.IsNullOrDeleted())
         {
             yield return "Error: path is null or deleted";
             yield break;

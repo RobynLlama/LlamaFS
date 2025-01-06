@@ -144,7 +144,7 @@ public partial class VirtualEnvironment
     {
         var info = GetNodeFromPath(Path);
 
-        if (info.state.IsNullorDeleted())
+        if (info.state.IsNullOrDeleted())
         {
             throw new FileSystemException(info.vfs, "Unable to open file for reading");
         }
@@ -219,7 +219,7 @@ public partial class VirtualEnvironment
 
                 var parentInfo = GetNodeFromPath(ParentPath);
 
-                if (parentInfo.state.IsNullorDeleted())
+                if (parentInfo.state.IsNullOrDeleted())
                     return false;
 
                 string childName = path.Replace(ParentPath, "");

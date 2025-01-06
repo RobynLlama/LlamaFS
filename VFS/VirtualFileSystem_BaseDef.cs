@@ -150,7 +150,7 @@ public partial class VirtualFileSystem
     {
         var nodeInfo = NodeGet(ID);
 
-        if (nodeInfo.state.IsNullorDeleted())
+        if (nodeInfo.state.IsNullOrDeleted())
         {
             return false;
         }
@@ -205,6 +205,7 @@ public partial class VirtualFileSystem
 
         DeletedRecords.Add(ID);
         FileTable.Remove(ID);
+        //Todo: Remove MemoryStream here
     }
 
     protected void NodeRename(int ID, string Name)
@@ -226,6 +227,7 @@ public partial class VirtualFileSystem
 
     protected MemoryStream NodeOpen(int ID, NodeFileMode mode)
     {
+        //Todo: copy on read?
         var NodeInfo = NodeGet(ID);
 
         switch (NodeInfo.state)
