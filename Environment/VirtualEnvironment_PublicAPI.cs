@@ -140,7 +140,7 @@ public partial class VirtualEnvironment
         return true;
 
     } */
-    public MemoryStream FileOpen(string Path, NodeFileMode mode)
+    public VFSFileStream FileOpen(string Path, NodeFileMode mode)
     {
         var info = GetNodeFromPath(Path);
 

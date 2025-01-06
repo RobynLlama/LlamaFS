@@ -26,7 +26,7 @@ public partial class VirtualFileSystem
             item.Save(output);
         }
 
-        MemoryStream fileStream;
+        VFSFileStream fileStream;
 
         foreach (int item in NodeData.Keys)
         {
@@ -67,7 +67,7 @@ public partial class VirtualFileSystem
         NodeRename(ID, Name);
     }
 
-    public MemoryStream FileOpen(int ID, NodeFileMode mode) => NodeOpen(ID, mode);
+    public VFSFileStream FileOpen(int ID, NodeFileMode mode) => NodeOpen(ID, mode);
     /* public void FileWrite(int ID, string contents)
     {
         if (contents.Length > MaxFileContentLength)

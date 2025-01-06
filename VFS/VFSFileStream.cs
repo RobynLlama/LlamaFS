@@ -27,6 +27,11 @@ public class VFSFileStream(MemoryStream memoryStream, int DiskID, int NodeID) : 
         _memoryStream.Flush();
     }
 
+    public byte[] ToArray()
+    {
+        return _memoryStream.ToArray();
+    }
+
     public override int Read(byte[] buffer, int offset, int count)
     {
         return _memoryStream.Read(buffer, offset, count);

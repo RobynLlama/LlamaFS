@@ -33,7 +33,7 @@ public class Zip : TerminalCommand
 
         //Console.WriteLine($"Final Path: {path}");
 
-        MemoryStream file = env.FileOpen(path, VFS.NodeFileMode.IO);
+        var file = env.FileOpen(path, VFS.NodeFileMode.IO);
 
         switch (option)
         {
