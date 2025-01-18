@@ -40,7 +40,7 @@ public partial class VirtualEnvironment
         if (variables.ContainsKey(name))
             return variables[name];
         else
-            return name;
+            return string.Empty;
     }
 
     public void SetEnvVariable(string name, string value)
